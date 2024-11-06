@@ -1,0 +1,121 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (c) 2024 ARK Electronics
+
+#include <dt-bindings/clock/tegra234-clock.h>
+#include <dt-bindings/gpio/tegra234-gpio.h>
+
+#define CAMERA_I2C_MUX_BUS(x) (0x1E + x)
+#define TC358743_PWDN TEGRA234_MAIN_GPIO(H, 6)
+
+/ {
+    fragment-camera@0 {
+        target-path = "/";
+        __overlay__ {
+            i2c@3180000 {
+                status = "okay";
+                clock-frequency = <400000>;
+
+                tca9546@70 {
+                    compatible = "nxp,pca9546";
+                    reg = <0x70>;
+                    i2c-parent = <&cam_i2c>;
+                    skip_mux_detect = "yes";
+                    status = "okay";
+                    force_bus_start = <CAMERA_I2C_MUX_BUS(0)>;
+
+                    i2c@0 {
+                        reg = <0>;
+                        i2c-mux,deselect-on-exit;
+                        status = "okay";
+
+                        tc358743@f {
+                            compatible = "toshiba,tc358743";
+                            reg = <0xf>;
+                            status = "okay";
+                            
+                            reset-gpios = <&gpio TC358743_PWDN GPIO_ACTIVE_HIGH>;
+                            vdd-supply = <&vdd_1v8_ao>;
+                            vddio-supply = <&vdd_3v3_ao>;
+
+                            clock-names = "refclk";
+                            clocks = <&bpmp TEGRA234_CLK_EXTPERIPH1>;
+                            clock-frequency = <27000000>;
+
+                            data-lanes = <2>;
+                            continuous-clock;
+                            
+                            port {
+                                tc358743_out0: endpoint {
+                                    clock-lanes = <0>;
+                                    data-lanes = <1 2>;
+                                    clock-noncontinuous;
+                                    link-frequencies = /bits/ 64 <182400000>;
+                                    remote-endpoint = <&tc358743_csi_in0>;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+
+            gpio@2200000 {
+                camera-control-output-high {
+                    gpios = <TC358743_PWDN 1>;
+                    label = "tc358743-pwdn";
+                };
+            };
+
+            tegra-capture-vi {
+                num-channels = <1>;
+                ports {
+                    #address-cells = <1>;
+                    #size-cells = <0>;
+                    port@0 {
+                        reg = <0>;
+                        status = "okay";
+                        tc358743_vi_in0: endpoint {
+                            status = "okay";
+                            port-index = <0>;  /* CSI-A */
+                            bus-width = <2>;   /* 4 lanes is supported but trying 2 based on forum posts and sample */
+                            remote-endpoint = <&tc358743_csi_out0>;
+                        };
+                    };
+                };
+            };
+
+            host1x@13e00000 {
+                nvcsi@15a00000 {
+                    num-channels = <1>;
+                    #address-cells = <1>;
+                    #size-cells = <0>;
+                    channel@0 {
+                        reg = <0>;
+                        status = "okay";
+                        ports {
+                            #address-cells = <1>;
+                            #size-cells = <0>;
+                            port@0 {
+                                reg = <0>;
+                                status = "okay";
+                                tc358743_csi_in0: endpoint@0 {
+                                    status = "okay";
+                                    port-index = <0>;
+                                    bus-width = <2>;
+                                    remote-endpoint = <&tc358743_out0>;
+                                };
+                            };
+                            port@1 {
+                                reg = <1>;
+                                status = "okay";
+                                tc358743_csi_out0: endpoint@1 {
+                                    status = "okay";
+                                    remote-endpoint = <&tc358743_vi_in0>;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+    };
+}; 

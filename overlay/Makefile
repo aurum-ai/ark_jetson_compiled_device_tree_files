@@ -41,6 +41,7 @@ dtbo-y += tegra234-p3767-0000+p3768-0000-csi.dtbo
 # dtbo-y += tegra234-p3767-camera-p3768-imx477-A.dtbo
 dtbo-y += tegra234-p3767-camera-p3768-ark-imx477-single.dtbo
 dtbo-y += tegra234-p3767-camera-p3768-ark-imx219-quad.dtbo
+dtbo-y += tegra234-p3767-camera-tc358743.dtbo
 
 
 ifneq ($(dtb-y),)

@@ -1,0 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (c) 2024 ARK Electronics
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/tegra234-p3767-0000-common.h>
+#include "tegra234-p3768-camera-tc358743.dtsi"
+
+/ {
+    overlay-name = "Camera TC358743 HDMI-CSI Bridge";
+    jetson-header-name = "Jetson 24pin CSI Connector";
+    compatible = JETSON_COMPATIBLE;
+}; 
